@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # SkillSwap
 
 A peer-to-peer skill exchange platform where users teach skills they know and learn skills they want in return.
@@ -29,7 +29,3 @@ python app.py
 
 The theme toggle is available in the navbar (when logged in) and on the login page. Your theme preference is saved in localStorage and persists across sessions.
 
-
-=======
-# skillswap
->>>>>>> b186340b6bbf02f1b56588674fa87ba21f5e2b9d
