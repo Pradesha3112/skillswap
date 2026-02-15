@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>My Profile</h1>
+    
+    <!-- Profile Strength Meter -->
+    <div style="margin-top: 2rem;">
+        <h3>Profile Strength</h3>
+        <div class="profile-strength-meter">
+            <div class="profile-strength-fill" style="width: {{ profile_strength }}%;">
+                {{ profile_strength }}%
+            </div>
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+            Complete your profile to increase your strength!
+        </p>
+    </div>
+
+    <!-- Personal Details -->
+    <div style="margin-top: 2rem;">
+        <h2>Personal Details</h2>
+        <div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-secondary); border-radius: 5px;">
+            <p><strong style="color: var(--accent-color);">Username:</strong> {{ user.username }}</p>
+            <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">Email:</strong> {{ user.email }}</p>
+            <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Member since: {{ user.created_at }}</p>
+            {% if avg_rating > 0 %}
+            <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">Average Rating:</strong> 
+                {{ "%.1f"|format(avg_rating) }} ⭐ ({{ rating_count }} ratings)
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Profile Summary Form -->
+        <form method="POST" action="{{ url_for('update_profile') }}" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label for="profile_summary">Profile Summary</label>
+                <textarea id="profile_summary" name="profile_summary" rows="3" placeholder="Tell others about yourself...">{{ user.profile_summary or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn">Update Profile</button>
+        </form>
+    </div>
+
+    <!-- Leadership Badges -->
+    <div style="margin-top: 2rem;">
+        <h2>Leadership Badges</h2>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Unlock badges by receiving ratings from other users!</p>
+        <div class="badge-display">
+            {% for i in range(1, 11) %}
+            <div class="badge {% if i <= badge_level %}unlocked{% else %}locked{% endif %}" title="Badge {{ i }}">
+                {{ i }}
+            </div>
+            {% endfor %}
+        </div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+            Current Level: <strong>{{ badge_level }}/10</strong>
+        </p>
+    </div>
+
+    <!-- Settings Section -->
+    <div style="margin-top: 2rem;">
+        <h2>Settings</h2>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem; margin-bottom: 1.5rem;">Customize your experience - changes apply instantly and persist across all pages</p>
+        
+        <div id="settingsMessage" style="display: none; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; background-color: #d4edda; border-left: 4px solid #28a745; color: #155724;"></div>
+        
+        <form id="settingsForm" style="margin-top: 1rem;">
+            <!-- Language Selection -->
+            <div class="form-group">
+                <label for="language">Language</label>
+                <select id="language" name="language" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer;">
+                    <option value="en" {% if user.language == 'en' or not user.language %}selected{% endif %}>English</option>
+                    <option value="es" {% if user.language == 'es' %}selected{% endif %}>Español</option>
+                    <option value="fr" {% if user.language == 'fr' %}selected{% endif %}>Français</option>
+                    <option value="de" {% if user.language == 'de' %}selected{% endif %}>Deutsch</option>
+                    <option value="hi" {% if user.language == 'hi' %}selected{% endif %}>हिंदी</option>
+                </select>
+            </div>
+
+            <!-- Theme Toggle -->
+            <div class="form-group">
+                <label>Theme</label>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                    <button type="button" id="themeLight" class="theme-option-btn {% if user.theme == 'light' or not user.theme %}active{% endif %}" data-theme="light" style="flex: 1; padding: 1rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer; transition: all 0.3s ease;">
+                        ☀️ Light Mode
+                    </button>
+                    <button type="button" id="themeDark" class="theme-option-btn {% if user.theme == 'dark' %}active{% endif %}" data-theme="dark" style="flex: 1; padding: 1rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer; transition: all 0.3s ease;">
+                        🌙 Dark Mode
+                    </button>
+                </div>
+                <input type="hidden" id="theme" name="theme" value="{{ user.theme or 'light' }}">
+            </div>
+
+            <!-- Font Size Control -->
+            <div class="form-group">
+                <label>Font Size</label>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem; align-items: center;">
+                    <button type="button" class="font-size-btn {% if user.font_size == 'small' %}active{% endif %}" data-size="small" style="flex: 1; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer; transition: all 0.3s ease;">Small</button>
+                    <button type="button" class="font-size-btn {% if user.font_size == 'medium' or not user.font_size %}active{% endif %}" data-size="medium" style="flex: 1; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer; transition: all 0.3s ease;">Medium</button>
+                    <button type="button" class="font-size-btn {% if user.font_size == 'large' %}active{% endif %}" data-size="large" style="flex: 1; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary); cursor: pointer; transition: all 0.3s ease;">Large</button>
+                </div>
+                <input type="hidden" id="font_size" name="font_size" value="{{ user.font_size or 'medium' }}">
+            </div>
+
+            <button type="submit" class="btn" style="margin-top: 1rem;">💾 Save Settings</button>
+        </form>
+    </div>
+
+    <style>
+        .theme-option-btn.active,
+        .font-size-btn.active {
+            background-color: var(--accent-color) !important;
+            color: white !important;
+            border-color: var(--accent-color) !important;
+        }
+        
+        .theme-option-btn:hover,
+        .font-size-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+
+    <!-- Notifications Section -->
+    <div style="margin-top: 2rem;">
+        <h2>Recent Notifications</h2>
+        <a href="{{ url_for('notifications') }}" class="btn" style="margin-bottom: 1rem;">View All Notifications ({{ notification_count }} unread)</a>
+        
+        {% if notifications %}
+            {% for notif in notifications[:5] %}
+            <div class="card" style="margin-top: 1rem; {% if not notif.is_read %}border-left: 4px solid var(--accent-color);{% endif %}">
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="flex: 1;">
+                        <p><strong style="color: var(--accent-color);">{{ notif.sender_name }}</strong></p>
+                        <p style="margin-top: 0.5rem; color: var(--text-secondary);">
+                            {% if notif.message_preview %}
+                                {{ notif.message_preview }}
+                            {% else %}
+                                New message
+                            {% endif %}
+                        </p>
+                        <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">{{ notif.created_at }}</p>
+                    </div>
+                    {% if not notif.is_read %}
+                    <span style="background-color: var(--accent-color); color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">New</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-secondary); margin-top: 1rem;">No notifications yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Saved/Bookmarked Posts -->
+    <div style="margin-top: 2rem;">
+        <h2>Saved Posts</h2>
+        
+        {% if bookmarked_posts %}
+            {% for post in bookmarked_posts %}
+            <div class="card" style="margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <p><strong style="color: var(--accent-color);">Posted by:</strong> {{ post.username }}</p>
+                        <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">I know:</strong> {{ post.skill_offered }}</p>
+                        <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">I want to learn:</strong> {{ post.skill_wanted }}</p>
+                        {% if post.description %}
+                        <div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-secondary); border-radius: 5px;">
+                            <p style="color: var(--text-secondary);">{{ post.description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('message', post_id=post.id) }}" class="btn" style="margin-left: 1rem;">View</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color: var(--text-secondary); margin-top: 1rem;">No saved posts yet. Bookmark interesting posts from the Community page!</p>
+        {% endif %}
+    </div>
+
+    <!-- My Posts -->
+    <div style="margin-top: 2rem;">
+        <h2>My Posts</h2>
+        
+        {% if posts %}
+            {% for post in posts %}
+            <div class="card" style="margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <p><strong style="color: var(--accent-color);">I know:</strong> {{ post.skill_offered }}</p>
+                        <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">I want to learn:</strong> {{ post.skill_wanted }}</p>
+                        {% if post.description %}
+                        <div style="margin-top: 1rem; padding: 1rem; background-color: var(--bg-secondary); border-radius: 5px;">
+                            <p style="color: var(--text-secondary);">{{ post.description }}</p>
+                        </div>
+                        {% endif %}
+                        <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Posted: {{ post.created_at }}</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" style="margin-left: 1rem;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                        <button type="submit" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card" style="text-align: center; padding: 2rem; margin-top: 1rem;">
+                <p style="color: var(--text-secondary);">You haven't created any posts yet.</p>
+                <a href="{{ url_for('create_post') }}" class="btn" style="margin-top: 1rem;">Create Your First Post</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Settings Management System
+    (function() {
+        'use strict';
+        
+        // Settings state management
+        let currentSettings = {
+            theme: localStorage.getItem('theme') || '{{ user.theme or "light" }}',
+            fontSize: localStorage.getItem('fontSize') || '{{ user.font_size or "medium" }}',
+            language: localStorage.getItem('language') || '{{ user.language or "en" }}'
+        };
+        
+        // Apply settings on page load
+        function applySettings(theme, fontSize, language) {
+            // Update state
+            currentSettings.theme = theme;
+            currentSettings.fontSize = fontSize;
+            currentSettings.language = language;
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            // Apply font size
+            document.body.setAttribute('data-font-size', fontSize);
+            localStorage.setItem('fontSize', fontSize);
+            
+            // Apply language
+            localStorage.setItem('language', language);
+            document.documentElement.setAttribute('lang', language);
+            
+            // Update theme icon in navbar
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+        
+        // Initialize on page load
+        applySettings(currentSettings.theme, currentSettings.fontSize, currentSettings.language);
+        
+        // Theme toggle buttons
+        document.querySelectorAll('.theme-option-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const theme = this.getAttribute('data-theme');
+                document.querySelectorAll('.theme-option-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('theme').value = theme;
+                
+                // Apply immediately
+                applySettings(theme, currentSettings.fontSize, currentSettings.language);
+            });
+        });
+        
+        // Font size buttons
+        document.querySelectorAll('.font-size-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const size = this.getAttribute('data-size');
+                document.querySelectorAll('.font-size-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('font_size').value = size;
+                
+                // Apply immediately
+                applySettings(currentSettings.theme, size, currentSettings.language);
+            });
+        });
+        
+        // Language selector
+        document.getElementById('language')?.addEventListener('change', function() {
+            const language = this.value;
+            applySettings(currentSettings.theme, currentSettings.fontSize, language);
+        });
+        
+        // Save settings form
+        document.getElementById('settingsForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const settings = {
+                language: formData.get('language'),
+                theme: formData.get('theme'),
+                font_size: formData.get('font_size')
+            };
+            
+            // Apply settings immediately
+            applySettings(settings.theme, settings.font_size, settings.language);
+            
+            // Save to database
+            try {
+                const response = await fetch('{{ url_for("update_profile") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(settings),
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    // Show success message
+                    const messageDiv = document.getElementById('settingsMessage');
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.backgroundColor = '#d4edda';
+                    messageDiv.style.borderLeftColor = '#28a745';
+                    messageDiv.style.color = '#155724';
+                    messageDiv.textContent = '✅ Settings saved successfully! Changes applied across all pages.';
+                    
+                    // Hide message after 5 seconds
+                    setTimeout(() => {
+                        messageDiv.style.display = 'none';
+                    }, 5000);
+                    
+                    // Trigger storage event to sync across tabs
+                    window.localStorage.setItem('settingsUpdated', Date.now().toString());
+                } else {
+                    throw new Error('Failed to save settings');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                const messageDiv = document.getElementById('settingsMessage');
+                messageDiv.style.display = 'block';
+                messageDiv.style.backgroundColor = '#f8d7da';
+                messageDiv.style.borderLeftColor = '#dc3545';
+                messageDiv.style.color = '#721c24';
+                messageDiv.textContent = '❌ Error saving settings. Please try again.';
+            }
+        });
+        
+        // Listen for settings updates from other tabs
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme' || e.key === 'fontSize' || e.key === 'language' || e.key === 'settingsUpdated') {
+                const theme = localStorage.getItem('theme') || currentTheme;
+                const fontSize = localStorage.getItem('fontSize') || currentFontSize;
+                const language = localStorage.getItem('language') || currentLanguage;
+                applySettings(theme, fontSize, language);
+            }
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}SkillSwap - Peer-to-Peer Skill Exchange{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; padding: 4rem 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--accent-color);">Welcome to SkillSwap</h1>
+    <p style="font-size: 1.3rem; color: var(--text-secondary); margin-bottom: 3rem;">
+        Exchange skills with others - Teach what you know, learn what you want!
+    </p>
+    
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="margin-top: 3rem; margin-bottom: 1.5rem;">How It Works</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem;">
+            <div style="padding: 1.5rem; background-color: var(--bg-secondary); border-radius: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                <h3>1. Browse</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Explore skills offered by the community</p>
+            </div>
+            <div style="padding: 1.5rem; background-color: var(--bg-secondary); border-radius: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
+                <h3>2. Connect</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Message users through our secure platform</p>
+            </div>
+            <div style="padding: 1.5rem; background-color: var(--bg-secondary); border-radius: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                <h3>3. Learn & Teach</h3>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Exchange knowledge and grow together</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 4rem;">
+        {% if not session.user_id %}
+        <a href="{{ url_for('signup') }}" class="btn" style="margin-right: 1rem; padding: 1rem 2rem; font-size: 1.1rem;">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn" style="background-color: var(--text-secondary); padding: 1rem 2rem; font-size: 1.1rem;">Login</a>
+        {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn" style="padding: 1rem 2rem; font-size: 1.1rem;">Go to Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

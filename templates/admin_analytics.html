@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Analytics Dashboard</h1>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">Admin-only analytics and statistics</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        <div class="card" style="text-align: center; padding: 2rem; background: linear-gradient(135deg, var(--accent-color), #5ba3f5); color: white;">
+            <h2 style="font-size: 3rem; margin: 0;">{{ total_users }}</h2>
+            <p style="margin-top: 0.5rem; font-size: 1.2rem;">Total Users</p>
+        </div>
+        
+        <div class="card" style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #2ecc71, #27ae60); color: white;">
+            <h2 style="font-size: 3rem; margin: 0;">{{ total_posts }}</h2>
+            <p style="margin-top: 0.5rem; font-size: 1.2rem;">Total Posts</p>
+        </div>
+        
+        <div class="card" style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+            <h2 style="font-size: 3rem; margin: 0;">{{ messages_sent }}</h2>
+            <p style="margin-top: 0.5rem; font-size: 1.2rem;">Messages Sent</p>
+        </div>
+        
+        <div class="card" style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #f39c12, #e67e22); color: white;">
+            <h2 style="font-size: 3rem; margin: 0;">{{ active_users }}</h2>
+            <p style="margin-top: 0.5rem; font-size: 1.2rem;">Active Users (30 days)</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - SkillSwap{% endblock %}
+
+{% block content %}
+<style>
+    .notification-unread {
+        border-left: 4px solid var(--accent-color) !important;
+        background-color: var(--bg-secondary) !important;
+    }
+</style>
+
+<div class="card">
+    <h1>Notifications</h1>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">You have {{ notification_count }} unread notification(s)</p>
+    
+    {% if notifications %}
+        {% for notif in notifications %}
+        <div class="card {% if not notif.is_read %}notification-unread{% endif %}" style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p>
+                        {% if notif.sender_id == notif.user_id %}
+                            <strong style="color: var(--accent-color);">You</strong>
+                            <span style="color: var(--text-secondary);"> sent a message</span>
+                        {% else %}
+                            <strong style="color: var(--accent-color);">{{ notif.sender_name }}</strong>
+                        {% endif %}
+                        {% if not notif.is_read %}
+                        <span style="background-color: var(--accent-color); color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem; margin-left: 0.5rem;">New</span>
+                        {% endif %}
+                    </p>
+                    <p style="margin-top: 0.5rem; color: var(--text-secondary);">
+                        {% if notif.message_preview %}
+                            {{ notif.message_preview }}
+                        {% else %}
+                            New message
+                        {% endif %}
+                    </p>
+                    <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">{{ notif.created_at }}</p>
+                    {% if notif.skill_post_id %}
+                    <a href="{{ url_for('message', post_id=notif.skill_post_id) }}" class="btn" style="margin-top: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;">View Message</a>
+                    {% endif %}
+                </div>
+                {% if not notif.is_read %}
+                <form method="POST" action="{{ url_for('mark_notification_read', notification_id=notif.id) }}" class="mark-read-form" data-notification-id="{{ notif.id }}" style="margin-left: 1rem;">
+                    <button type="submit" class="btn mark-read-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Mark as Read</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem; margin-top: 1rem;">
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">No notifications yet.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Handle "Mark as Read" with AJAX
+    document.querySelectorAll('.mark-read-form').forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const notificationId = form.getAttribute('data-notification-id');
+            const button = form.querySelector('.mark-read-btn');
+            const notificationCard = form.closest('.card');
+            
+            try {
+                const response = await fetch(`/mark_notification_read/${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                // Display the response
+                if (data.success) {
+                    // Show success message
+                    const successMsg = document.createElement('div');
+                    successMsg.style.cssText = 'padding: 0.5rem; margin-top: 0.5rem; background-color: #d4edda; border-left: 4px solid #28a745; color: #155724; border-radius: 5px;';
+                    successMsg.textContent = 'Response: ' + JSON.stringify(data);
+                    form.parentElement.appendChild(successMsg);
+                    
+                    // Remove "New" badge
+                    const newBadge = notificationCard.querySelector('span[style*="background-color: var(--accent-color)"]');
+                    if (newBadge) {
+                        newBadge.remove();
+                    }
+                    
+                    // Remove unread styling
+                    notificationCard.classList.remove('notification-unread');
+                    notificationCard.style.borderLeft = '';
+                    notificationCard.style.backgroundColor = '';
+                    
+                    // Remove the form/button
+                    form.remove();
+                    
+                    // Update notification count
+                    const countElement = document.querySelector('p[style*="color: var(--text-secondary)"]');
+                    if (countElement) {
+                        const currentCount = parseInt(countElement.textContent.match(/\d+/)?.[0] || '0');
+                        const newCount = Math.max(0, currentCount - 1);
+                        countElement.textContent = `You have ${newCount} unread notification(s)`;
+                    }
+                    
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        successMsg.remove();
+                    }, 3000);
+                } else {
+                    alert('Error: ' + JSON.stringify(data));
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+                alert('Error marking notification as read. Please try again.');
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Community - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Community</h1>
+    <p style="margin-top: 0.5rem; color: var(--text-secondary);">Browse skill exchange posts from other users.</p>
+    
+    <!-- Enhanced Search Form -->
+    <form method="GET" action="{{ url_for('community') }}" style="margin: 2rem 0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Search</label>
+                <input type="text" name="search" value="{{ search }}" placeholder="Search skills..." style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary);">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Skill Offered</label>
+                <input type="text" name="skill_offered" value="{{ skill_offered }}" placeholder="Filter by skill offered..." style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary);">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Skill Wanted</label>
+                <input type="text" name="skill_wanted" value="{{ skill_wanted }}" placeholder="Filter by skill wanted..." style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary);">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">Min Badge Level</label>
+                <input type="number" name="min_badge" value="{{ min_badge }}" min="1" max="10" placeholder="1-10" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 5px; background-color: var(--bg-secondary); color: var(--text-primary);">
+            </div>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn">Apply Filters</button>
+            {% if search or skill_offered or skill_wanted or min_badge %}
+            <a href="{{ url_for('community') }}" class="btn" style="background-color: var(--text-secondary);">Clear All</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if posts %}
+        {% for post in posts %}
+        <div class="card" style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">Posted by: {{ post.username }}</h3>
+                    <div class="badge-display" style="margin-top: 0.5rem;">
+                        {% for i in range(1, 11) %}
+                        <div class="badge {% if i <= (post.badge_level or 1) %}unlocked{% else %}locked{% endif %}" title="Badge {{ i }}" style="width: 20px; height: 20px; font-size: 0.7rem;">
+                            {{ i }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if post.avg_rating and post.avg_rating > 0 %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+                        Rating: {{ "%.1f"|format(post.avg_rating) }} ⭐
+                    </p>
+                    {% endif %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">{{ post.created_at }}</p>
+                </div>
+            </div>
+            
+            <div style="margin: 1rem 0;">
+                <p><strong style="color: var(--accent-color);">I know:</strong> {{ post.skill_offered }}</p>
+                <p style="margin-top: 0.5rem;"><strong style="color: var(--accent-color);">I want to learn:</strong> {{ post.skill_wanted }}</p>
+            </div>
+            
+            {% if post.description %}
+            <div style="margin: 1rem 0; padding: 1rem; background-color: var(--bg-secondary); border-radius: 5px;">
+                <p style="color: var(--text-secondary);">{{ post.description }}</p>
+            </div>
+            {% endif %}
+            
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <a href="{{ url_for('message', post_id=post.id) }}" class="btn">Message</a>
+                <button class="btn bookmark-btn" data-post-id="{{ post.id }}" style="background-color: {% if post.id in bookmarked_ids %}var(--accent-color){% else %}var(--text-secondary){% endif %};">
+                    {% if post.id in bookmarked_ids %}⭐ Saved{% else %}🔖 Bookmark{% endif %}
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">No posts found{% if search %} matching your search{% endif %}.</p>
+            {% if not search %}
+            <a href="{{ url_for('create_post') }}" class="btn" style="margin-top: 1rem;">Create First Post</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Bookmark functionality
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const postId = this.getAttribute('data-post-id');
+            const formData = new FormData();
+            formData.append('post_id', postId);
+            
+            try {
+                const response = await fetch(`/bookmark/${postId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.action === 'added') {
+                        this.textContent = '⭐ Saved';
+                        this.style.backgroundColor = 'var(--accent-color)';
+                    } else {
+                        this.textContent = '🔖 Bookmark';
+                        this.style.backgroundColor = 'var(--text-secondary)';
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}

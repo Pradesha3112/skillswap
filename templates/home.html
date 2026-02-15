@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Welcome to SkillSwap, {{ username }}!</h1>
+    <p style="margin-top: 1rem; color: var(--text-secondary);">SkillSwap is a peer-to-peer skill exchange platform where you can teach skills you know and learn skills you want in return.</p>
+    
+    <h2 style="margin-top: 2rem;">How It Works</h2>
+    <ol style="margin-left: 2rem; margin-top: 1rem; color: var(--text-secondary);">
+        <li style="margin-bottom: 0.5rem;">Browse the Community to find skills you want to learn</li>
+        <li style="margin-bottom: 0.5rem;">Connect with other users through our in-app messaging system</li>
+        <li style="margin-bottom: 0.5rem;">Schedule your skill exchange sessions</li>
+        <li style="margin-bottom: 0.5rem;">Complete quizzes to validate your skills</li>
+        <li style="margin-bottom: 0.5rem;">Share knowledge and learn together!</li>
+    </ol>
+
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('create_post') }}" class="btn" style="margin-right: 1rem;">Create New Post</a>
+        <a href="{{ url_for('community') }}" class="btn">Explore Community</a>
+    </div>
+</div>
+{% endblock %}

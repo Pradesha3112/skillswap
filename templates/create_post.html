@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Create Post - SkillSwap{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Create Skill Exchange Post</h1>
+    
+    <form method="POST" action="{{ url_for('create_post') }}" style="margin-top: 2rem;">
+        <div class="form-group">
+            <label for="skill_offered">Skill Offered *</label>
+            <input type="text" id="skill_offered" name="skill_offered" required placeholder="e.g., Pencil Art, Python Programming">
+        </div>
+        
+        <div class="form-group">
+            <label for="skill_wanted">Skill Wanted *</label>
+            <input type="text" id="skill_wanted" name="skill_wanted" required placeholder="e.g., HTML Basics, Guitar Playing">
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description (Optional)</label>
+            <textarea id="description" name="description" rows="5" placeholder="Add more details about your skills and what you're looking for..."></textarea>
+        </div>
+        
+        <button type="submit" class="btn">Create Post</button>
+        <a href="{{ url_for('community') }}" class="btn" style="background-color: var(--text-secondary); margin-left: 1rem;">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+
+
